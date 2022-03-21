@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 NAME: beanplot
 
@@ -58,8 +58,9 @@ def violinplot(ax,
     """
     dist = np.max(pos)-np.min(pos)
     w = min(0.15*max(dist,1.0),0.5)
-    for i in xrange(len(pos)):
+    for i in range(len(pos)):
         d = data[:,i]
+        d = d[~np.isnan(d)]
         p = pos[i]
         k = scipy.stats.gaussian_kde(d) # calculates the kernel density
         s = np.std(k.dataset)  # FIXME: magic number, needs to be better
@@ -105,8 +106,9 @@ def stripchart(ax,
         w = min(0.15*max(dist,1.0),0.5)
 
     # plot each distribution
-    for i in xrange(len(pos)):
+    for i in range(len(pos)):
         d = data[:,i]
+        d = d[~np.isnan(d)]
         p = pos[i]
         
         hw = w/8.0
@@ -154,8 +156,9 @@ def parse_cmdline():
     sEpilog = 'Copyright %s (%s)' %(__author__, __email__)
 
     oParser = argparse.ArgumentParser(description=sDescription,
-                                      version=sVersion,
                                       epilog=sEpilog)
+    oParser.add_argument('--version', action='version', version=sVersion)
+
     oParser.add_argument('sFile',
                          metavar='FILE',
                          help='Delimited file. [if set to "-" or "stdin" reads from standard in]')
@@ -345,7 +348,7 @@ def main():
 
     # Header in file
     if oArgs.bHead:
-        aH = oR.next()
+        aH = next(oR)
         aH = [aH[i] for i in range(len(aH)) if i not in aCols]
     else:
         aH = None
@@ -354,7 +357,7 @@ def main():
     aM = []
     for a in oR:
         try:
-            a_temp = [float(a[i]) for i in range(len(a)) if i not in aCols]
+            a_temp = [float('nan') if a[i] == "" else float(a[i]) for i in range(len(a)) if i not in aCols]
         except:
             oParser.error('Could not convert all values to floats. EXIT.')
         aM.append(a_temp)
@@ -396,8 +399,8 @@ def main():
     ax.spines['top'].set_visible(False) # get rid of top axis
     plt.tick_params(axis='x',        # changes apply to the x-axis
                     which='both',    # both major and minor ticks are affected
-                    bottom='on',     # ticks along the bottom edge are off
-                    top='off',       # ticks along the top edge are off
+                    bottom=True,     # ticks along the bottom edge are off
+                    top=False,       # ticks along the top edge are off
                     direction='in',  # direction of ticks
                     labelsize=oArgs.iFont,
                     colors='k')
@@ -405,8 +408,8 @@ def main():
     ax.spines['right'].set_visible(False) # get rid of right axis
     plt.tick_params(axis='y',        # changes apply to the y-axis
                     which='both',    # both major and minor ticks are affected
-                    left='on',       # ticks along the bottom edge are off
-                    right='off',     # ticks along the top edge are off 
+                    left=True,       # ticks along the bottom edge are off
+                    right=False,     # ticks along the top edge are off 
                     direction='in',  # direction of ticks
                     labelsize=oArgs.iFont,
                     colors='k')         
@@ -434,7 +437,7 @@ def main():
         aTemp = [s.strip() for s in oArgs.sConnect.split(',')]
         sColor = aTemp[0]
         fAlpha = float(aTemp[1])
-        for i in xrange(aM.shape[0]):
+        for i in range(aM.shape[0]):
             ax.plot(range(1,aM.shape[1]+1), aM[i],'-', color=sColor, alpha=fAlpha)
     
     # BEANPLOT
